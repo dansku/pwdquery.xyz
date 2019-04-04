@@ -1,2 +1,1 @@
-# pwdquery.xyz
-Source-code for pwdquery.xyz website and parsing scripts.
+![pwdquery.xyz](https://github.com/dansku/pwdquery.xyz/blob/master/img/logo.png)
