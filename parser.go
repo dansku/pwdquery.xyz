@@ -160,7 +160,7 @@ func main() {
 	i := 0
 	newPassword := 0
 	duplicatedPassword := 0
-	notChecked := 0
+	tooShort := 0
 
 	for s.Scan() {
 		i++
@@ -185,19 +185,19 @@ func main() {
 
 						newPassword++
 						go insertIntoDatabase(filename, letter, email, password, passwordLenght, db)
-						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Magenta(notChecked), email, password, BgGreen(Black("Added to database.")))
+						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgGreen(Black("Added to database.")))
 						time.Sleep(time.Duration(delay) * time.Microsecond)
 
 					} else {
 
 						duplicatedPassword++
-						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Magenta(notChecked), email, password, BgRed(Black("Already in database.")))
+						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgRed(Black("Already in database.")))
 
 					}
 				} else {
 					// Count lines not analyzed
 					notChecked++
-					log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Magenta(notChecked), email, password, BgCyan(Black("Password too short.")))
+					log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgCyan(Black("Password too short.")))
 				}
 			}
 		}
