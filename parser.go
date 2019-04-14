@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -123,17 +122,17 @@ func main() {
 	}
 	defer db.Close() // Avoid closing db connection
 
-	// Confirms that there are 3 arguments [file, delay, start] otherwise stops the application
+	// Confirms that there are 3 arguments [file, concurrency, start] otherwise stops the application
 	if len(os.Args) != 4 {
-		log.Fatal("You need to enter file.txt delay start")
+		log.Fatal("You need to enter file.txt concurrency start")
 	}
 
 	// Reads arguments
 	filename := os.Args[1]
 
-	delay, err := strconv.ParseInt(os.Args[2], 10, 0)
+	concurrency, err := strconv.ParseInt(os.Args[2], 10, 0)
 	if err != nil {
-		log.Fatal("DELAY must be an integer.")
+		log.Fatal("Concurrency must be an integer.")
 	}
 
 	start, err := strconv.ParseInt(os.Args[3], 10, 0)
@@ -142,7 +141,7 @@ func main() {
 	}
 
 	// Starts parsing the file
-	fmt.Printf("Starting application, reading file %s with delay %d and starting at %d.\n", filename, delay, start)
+	fmt.Printf("Starting application, reading file %s with concurrency %d and starting at %d.\n", filename, concurrency, start)
 
 	fptr := flag.String("fpath", filename, "file path to read from")
 	flag.Parse()
@@ -162,6 +161,10 @@ func main() {
 	duplicatedPassword := 0
 	tooShort := 0
 
+	// Setup Concurrency
+	maxGoroutines := concurrency
+	guard := make(chan struct{}, maxGoroutines)
+
 	for s.Scan() {
 		i++
 
@@ -175,30 +178,13 @@ func main() {
 				s := strings.Split(s.Text(), ":")
 				email, password := strings.ToLower(clearString(s[0])), clearString(s[1])
 
-				if len(password) > 4 {
+				// Start workers to parse and save to database
+				guard <- struct{}{}
+				go func(n int) {
+					insertIntoDatabase(filename, letter, email, password, passwordLenght, db)
+					<-guard
+				}(i)
 
-					letter := returnFirstChar(email)
-					passwordLenght := len(password)
-					password := hidePassword(password)
-
-					if checkAccount(filename, i, letter, email, password, db) {
-
-						newPassword++
-						go insertIntoDatabase(filename, letter, email, password, passwordLenght, db)
-						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgGreen(Black("Added to database.")))
-						time.Sleep(time.Duration(delay) * time.Microsecond)
-
-					} else {
-
-						duplicatedPassword++
-						log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgRed(Black("Already in database.")))
-
-					}
-				} else {
-					// Count lines not analyzed
-					notChecked++
-					log.Printf("%s - %d/%d/%d/%d [%s/%s] %s", Cyan(filename), Gray(i), Green(newPassword), Red(duplicatedPassword), Cyan(tooShort), email, password, BgCyan(Black("Password too short.")))
-				}
 			}
 		}
 	}
