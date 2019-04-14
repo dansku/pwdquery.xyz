@@ -241,3 +241,13 @@ CREATE TABLE pwd_database.other (
 DEFAULT CHARSET=utf8
 COMMENT='utf8_general_ci,COERCIBLE';
 CREATE INDEX email USING BTREE ON pwd_database.other (email);
+CREATE TABLE pwd_database.counter (
+	id INT NOT NULL AUTO_INCREMENT,
+	counter_count varchar(50) NOT NULL,
+	created_at timestamp NOT NULL CURRENT_TIMESTAMP
+	CONSTRAINT `PRIMARY` PRIMARY KEY (id)
+)ENGINE=InnoDB
+DEFAULT CHARSET=utf8
+COMMENT='utf8_general_ci,COERCIBLE';
+CREATE INDEX email USING BTREE ON pwd_database.counter (email);
+
