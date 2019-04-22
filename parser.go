@@ -137,7 +137,7 @@ func main() {
 
 	start, err := strconv.ParseInt(os.Args[3], 10, 0)
 	if err != nil {
-		log.Fatal("START must be an integer.")
+		log.Fatal("Start must be an integer.")
 	}
 
 	// Starts parsing the file
