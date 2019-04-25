@@ -15,10 +15,6 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-/*
-	TODO
-	[] Fix email regex
-*/
 
 // List of Application Variables
 var (
@@ -42,6 +38,7 @@ func validateEmail(email string) bool {
 	return true
 }
 
+// hidePassword gets the passworld lenght and first and last two chart and return the hidden password
 func hidePassword(password string, pnum int) string {
 	hiddenPassword := password[0:2]
 
@@ -54,6 +51,7 @@ func hidePassword(password string, pnum int) string {
 	return hiddenPassword
 }
 
+// uniqueSlice gets a slice of passwords and return only unique values
 func uniqueSlice(slice []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -66,11 +64,13 @@ func uniqueSlice(slice []string) []string {
 	return list
 }
 
+// sliceToJSON gets the password slices and return as a json string
 func sliceToJSON(pass []string) string {
 	passwords := uniqueSlice(pass)
 	return strings.Join(passwords, ",")
 }
 
+// searchEmail searches for the email in the database
 func searchEmail(email string, db *sql.DB) []string {
 
 	// Get email first letter
@@ -136,7 +136,9 @@ func main() {
 	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
+	e.Use(middleware.LoggerWithConfig(
+		middleware.LoggerConfig{Format: "=> method=${method}, status=${status}, time=${time_rfc3339_nano}, IP=${remote_ip}, agent=${user_agent}, latency=${latency_human}.\n\n"})
+	)
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://pwdquery.xyz", "https://pwdquery.xyz"},
@@ -156,13 +158,13 @@ func main() {
 
 		// Check if token match
 		if token != readToken {
-			log.Printf("Request token doesn't match. Variables Provided: token=>%s, email=>%s", token, email)
+			fmt.Printf("=> Request token doesn't match. Variables Provided: token=>%s, email=>%s", token, email)
 			return c.String(http.StatusBadRequest, "{ \"error\": \"Wrong token provided.\"}")
 		}
 
 		// Check if email is valid
 		if !validateEmail(email) {
-			log.Printf("Email is not valid. Variables provided token=>%s, email=>%s", token, email)
+			fmt.Printf("=> Email is not valid. Variables provided token=>%s, email=>%s", token, email)
 			return c.String(http.StatusBadRequest, "{ \"error\": \"Invalid email provided.\"}")
 		}
 
@@ -176,18 +178,19 @@ func main() {
 
 		// Get all passwords with that email address
 		passwords := searchEmail(email, db)
+		uniquePasswords := uniqueSlice(passwords)
 
 		// Close db connection
 		db.Close()
 
 		// If no passwords found, great
 		if len(passwords) == 0 {
-			log.Printf("NEW QUERRY [%s] #%d passwords found.", email, len(passwords))
+			fmt.Printf("=> #0 [%s] ", email)
 			return c.String(http.StatusOK, "{\"error\":\"Email not found.\"}")
 		}
 
 		// Display a list of passwords
-		log.Printf("NEW QUERRY [%s] #%d passwords found => %s.", email, len(passwords), passwords)
+		fmt.Printf("=> #%d [%s] %s ", len(uniquePasswords), email, uniquePasswords)
 		return c.String(http.StatusOK, "{\"email\": \""+email+"\", \"password\":["+sliceToJSON(passwords)+"]}")
 	})
 
