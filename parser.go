@@ -29,6 +29,7 @@ type User struct {
 
 //----[ FUNCTIONS ]------------------
 
+// validateEmailPassword checks if the email is valid
 func validateEmailPassword(account string) bool {
 	re := regexp.MustCompile("^(([^<>()\\[\\]\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))+\\:(.*)$")
 	return re.MatchString(account)
@@ -62,6 +63,7 @@ func returnFirstChar(email string) string {
 	return "other"
 }
 
+// insertIntoDatabase inserts the new email and password to the database
 func insertIntoDatabase(filename string, letter string, email string, password string, pnum int, db *sql.DB) bool {
 	// Execute database the query
 	query := fmt.Sprintf("INSERT INTO %s(email, password, pnum) VALUES ('%s', '%s', '%d')", letter, email, password, pnum)
@@ -94,6 +96,7 @@ func checkAccount(filename string, i int, letter string, email string, password 
 	return false
 }
 
+// clearString remove unnecessary chars from string
 func clearString(message string) string {
 	message = strings.Replace(message, "'", "", -1)
 	message = strings.Replace(message, "\\", "", -1)
@@ -117,9 +120,11 @@ func main() {
 
 	// Initiate database connection
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbServer, dbPort, dbDatabase))
+
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
 	defer db.Close() // Avoid closing db connection
 
 	// Confirms that there are 3 arguments [file, concurrency, start] otherwise stops the application
@@ -165,6 +170,7 @@ func main() {
 	maxGoroutines := concurrency
 	guard := make(chan struct{}, maxGoroutines)
 
+	// Scan all the lines
 	for s.Scan() {
 		i++
 
