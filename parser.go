@@ -183,7 +183,8 @@ func main() {
 				// Split string between email and password
 				s := strings.Split(s.Text(), ":")
 				email, password := strings.ToLower(clearString(s[0])), clearString(s[1])
-
+				letter := returnFirstChar(email)
+				passwordLenght := len(password)
 				// Start workers to parse and save to database
 				guard <- struct{}{}
 				go func(n int) {
