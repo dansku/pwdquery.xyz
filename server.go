@@ -147,12 +147,13 @@ func main() {
 
 	// ROUTES
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Zup?!")
+	c.Response().Header().Set(echo.HeaderContentType, "application/json")
+		return c.String(http.StatusOK, "{\"message\":\"Zup?!\"}")
 	})
 
 	// Check if email is in database
 	e.GET("/query/:readToken/:email", func(c echo.Context) error {
-
+		c.Response().Header().Set(echo.HeaderContentType, "application/json")
 		token := c.Param("readToken")
 		email := c.Param("email")
 
